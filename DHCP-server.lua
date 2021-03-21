@@ -13,6 +13,13 @@ local init = function()
 end
 
 
+function table.removekey(table, key)
+    local element = table[key]
+    table[key] = nil
+    return element
+end
+
+
 
 local isRegistered = function(ID)
   for i,o in pairs(allocated_ids) do
@@ -23,6 +30,14 @@ local isRegistered = function(ID)
 return false
 end
 
+local unregisterID = function(ID)
+  if isRegistered(ID) then
+    table.removekey(allocated_ids,ID)
+    return true
+  else
+    return false
+  end
+end
 
 local registerID = function()
   local random = math.random(2,255)
@@ -32,7 +47,7 @@ local registerID = function()
     print("Found ID but was already taken")
     return
   end
-  print("Found ID: " .. random)
+  print("Registered ID: " .. random)
   table.insert(allocated_ids,random)
 
   return random
@@ -41,6 +56,7 @@ end
 
 init()
 
+print(unregisterID(3))
 
 while true do
   local event, side, ch, rch, msg, dist = os.pullEvent("modem_message")
@@ -50,5 +66,12 @@ while true do
       rch = DHCPchannel
     end
     modem.transmit(rch,DHCPchannel,ID)
+  elseif msg == "UNREGISTER" then
+    local event, side, ch2, rch2, msg2, dist2 = os.pullEvent("modem_message")
+    if dist2 == dist then
+      local status = unRegisterID(msg2)
+      print("Unregistered ID: " .. msg2)
+      modem.transmit(rch,DHCPchannel,status)
+    end
   end
 end
